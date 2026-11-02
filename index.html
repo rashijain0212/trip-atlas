@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2026 Road Trip Atlas</title>
+<meta name="description" content="Five 2026 road trips on one page: a route map, highlights, and a link to the full itinerary for each.">
+<meta property="og:title" content="2026 Road Trip Atlas">
+<meta property="og:description" content="Five 2026 road trips on one page: a route map, highlights, and a link to the full itinerary for each.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230E6B4B'/%3E%3Crect x='5' y='5' width='54' height='54' rx='8' fill='none' stroke='white' stroke-width='3'/%3E%3Cpath d='M14 42 L26 30 L34 38 L50 20' fill='none' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a road-atlas page. The hero pairs the title with a plotted map of all five routes;
+   the trips follow as a dated timeline, each row = date rail + route + highlights + links. */
+:root{
+  --bg:#EDF0EE; --surface:#F8FAF9; --ink:#16221D; --muted:#55645D; --line:#CBD3CE; --grid:#D3DAD6;
+  --sign:#0E6B4B; --sign-ink:#FFFFFF; --flight:#8A9A92;
+  --c-nm:#C8421A; --c-oz:#0B7A6B; --c-co:#7A4BC2; --c-wa:#1D63D6; --c-ca:#9A6700;
+  --f-display:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
+  --f-body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1512; --surface:#162019; --ink:#E5EEE9; --muted:#9BAEA4; --line:#293A31; --grid:#1D2B24;
+    --sign:#17805C; --flight:#6B7F75;
+    --c-nm:#FF7E55; --c-oz:#3FD1BB; --c-co:#B792FF; --c-wa:#6FA8FF; --c-ca:#F2C14E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1512; --surface:#162019; --ink:#E5EEE9; --muted:#9BAEA4; --line:#293A31; --grid:#1D2B24;
+  --sign:#17805C; --flight:#6B7F75;
+  --c-nm:#FF7E55; --c-oz:#3FD1BB; --c-co:#B792FF; --c-wa:#6FA8FF; --c-ca:#F2C14E;
+  color-scheme:dark;
+}
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font:400 16px/1.55 var(--f-body);
+  padding-block:28px 56px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+.page{max-width:1120px; margin:0 auto}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink); outline-offset:3px; border-radius:4px}
+
+/* ---------- hero ---------- */
+.hero{display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:32px 44px; align-items:center}
+.eyebrow{font:500 12px/1 var(--f-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 16px}
+h1{margin:0 0 18px; font-weight:400}
+.sign{
+  display:inline-block; background:var(--sign); color:var(--sign-ink);
+  font:700 clamp(38px,6vw,64px)/1 var(--f-display); letter-spacing:.02em; text-transform:uppercase;
+  padding:14px 24px 12px; border-radius:10px;
+  box-shadow:inset 0 0 0 4px var(--sign), inset 0 0 0 6px var(--sign-ink);
+}
+.lede{font-size:18px; max-width:36ch; margin:0 0 24px; color:var(--ink)}
+.facts{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 24px; margin:0 0 24px}
+.facts div{border-top:1px solid var(--line); padding-top:8px}
+.facts dt{font:500 11px/1.3 var(--f-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted); order:2}
+.facts dd{margin:0; font:600 40px/1 var(--f-display); font-variant-numeric:tabular-nums}
+.facts div{display:flex; flex-direction:column}
+.jump{display:flex; flex-wrap:wrap; gap:8px}
+.jump a{
+  display:inline-flex; align-items:center; gap:8px; text-decoration:none;
+  font:500 14px/1 var(--f-body); padding:9px 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface);
+}
+.jump a:hover{border-color:var(--ink)}
+.jump i{width:10px; height:10px; border-radius:50%; background:var(--c)}
+
+.mapfig{margin:0; min-width:0}
+.mapwrap{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:8px}
+#atlas{display:block; width:100%; height:auto}
+#atlas .gl{stroke:var(--grid); stroke-width:1; fill:none}
+#atlas .gt{font:400 10px var(--f-mono); fill:var(--muted)}
+#atlas .fl{stroke:var(--flight); stroke-width:1.4; stroke-dasharray:3 5; fill:none; opacity:.7}
+#atlas .route{fill:none; stroke-width:3.2; stroke-linejoin:round; stroke-linecap:round}
+#atlas .dot{fill:var(--surface); stroke-width:2}
+#atlas .hub{fill:var(--ink)}
+#atlas .lbl{font:600 15px var(--f-body); fill:var(--ink); paint-order:stroke; stroke:var(--surface); stroke-width:4px; stroke-linejoin:round}
+#atlas .tg{transition:opacity .15s}
+#atlas.hl .tg{opacity:.16}
+#atlas.hl .tg.on{opacity:1}
+.mapfig figcaption{font:400 12px/1.5 var(--f-mono); color:var(--muted); margin:10px 4px 0}
+.keyline{display:inline-block; width:22px; border-top:2px dashed var(--flight); vertical-align:middle; margin-right:6px}
+
+/* ---------- timeline ---------- */
+.timeline{margin-top:48px}
+.trip{
+  display:grid; grid-template-columns:minmax(0,210px) minmax(0,1fr); gap:20px 44px;
+  padding-block:34px 40px; border-top:3px solid var(--c); scroll-margin-top:16px;
+}
+.when .dates{font:700 clamp(40px,5vw,58px)/.95 var(--f-display); text-transform:uppercase; color:var(--c); margin:0 0 10px}
+.when .meta{font:500 12px/1.6 var(--f-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0}
+.body{min-width:0}
+.trip h2{margin:0 0 14px; font:600 clamp(30px,4vw,40px)/1.05 var(--f-display); text-wrap:balance}
+.route-list{list-style:none; margin:0 0 22px; padding:0; display:flex; flex-wrap:wrap; gap:6px 0; font:500 14.5px/1.35 var(--f-body)}
+.route-list li{display:flex; align-items:center}
+.route-list li:not(:last-child)::after{content:"\2192"; color:var(--c); font-weight:600; margin:0 9px}
+.cols{display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:24px 36px; margin-bottom:24px}
+.cols h3{font:500 11px/1 var(--f-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 0 12px}
+.cols ul{list-style:none; margin:0; padding:0; display:grid; gap:9px}
+.cols li{position:relative; padding-left:18px}
+.cols li::before{content:""; position:absolute; left:0; top:.62em; width:7px; height:7px; background:var(--c); border-radius:1px}
+.cols .notes li{color:var(--muted); font-size:15px}
+.links{display:flex; flex-wrap:wrap; gap:10px}
+.btn{
+  display:inline-flex; align-items:center; gap:8px; text-decoration:none;
+  font:600 14.5px/1 var(--f-body); padding:12px 16px; border-radius:8px; border:1px solid var(--line); background:var(--surface);
+}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--sign); color:var(--sign-ink); border-color:var(--sign)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn span{font-family:var(--f-mono); font-weight:400}
+footer{border-top:1px solid var(--line); margin-top:8px; padding-top:20px; font:400 13.5px/1.6 var(--f-body); color:var(--muted); display:grid; gap:6px; max-width:78ch}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .lede{max-width:52ch}
+  .trip{grid-template-columns:minmax(0,1fr)}
+  .when{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 18px}
+  .when .dates{margin:0}
+  .cols{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:600px){
+  #atlas .lbl{font-size:25px; stroke-width:6px}
+  #atlas .lbl.minor{display:none}
+  #atlas .gt{font-size:17px}
+  .facts dd{font-size:34px}
+}
+@media (prefers-reduced-motion:reduce){#atlas .tg{transition:none}}
+
+.btn.pending{color:var(--muted); border-style:dashed; cursor:default; font-weight:500}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hero">
+  <div>
+    <p class="eyebrow">July &ndash; October 2026</p>
+    <h1><span class="sign">2026 Road Trip Atlas</span></h1>
+    <p class="lede">Five trips across nine states. Each one has its route, the stops that mattered, and a link to the full itinerary.</p>
+    <dl class="facts">
+      <div><dt>Trips</dt><dd>5</dd></div>
+      <div><dt>Days on the road</dt><dd>30</dd></div>
+      <div><dt>States</dt><dd>9</dd></div>
+      <div><dt>Flown / driven</dt><dd>3 / 2</dd></div>
+    </dl>
+    <nav class="jump" aria-label="Jump to a trip">
+      <a href="#new-mexico" data-hl="nm" style="--c:var(--c-nm)"><i></i>New Mexico</a>
+      <a href="#ozarks" data-hl="oz" style="--c:var(--c-oz)"><i></i>Ozarks</a>
+      <a href="#colorado" data-hl="co" style="--c:var(--c-co)"><i></i>Colorado</a>
+      <a href="#washington" data-hl="wa" style="--c:var(--c-wa)"><i></i>Washington</a>
+      <a href="#california" data-hl="ca" style="--c:var(--c-ca)"><i></i>California</a>
+    </nav>
+  </div>
+  <figure class="mapfig">
+    <div class="mapwrap">
+      <svg id="atlas" viewBox="0 0 860 580" role="img" aria-label="Map of the five 2026 road trips: New Mexico, the Ozarks, Colorado, Washington and Oregon, and Nevada and California"></svg>
+    </div>
+    <figcaption><span class="keyline"></span>flights from Dallas &middot; solid lines join the main stops, not the exact roads</figcaption>
+  </figure>
+</header>
+
+<main class="timeline">
+
+  <article class="trip" id="new-mexico" style="--c:var(--c-nm)">
+    <div class="when">
+      <p class="dates">Jul 1&ndash;5</p>
+      <p class="meta">5 days<br>Drove from Richardson, TX</p>
+    </div>
+    <div class="body">
+      <h2>New Mexico and Route 66</h2>
+      <ol class="route-list">
+        <li>Richardson</li><li>Carlsbad</li><li>Cloudcroft</li><li>White Sands</li><li>Socorro</li><li>Albuquerque</li><li>Santa Fe</li><li>Tucumcari</li><li>Amarillo</li><li>Home</li>
+      </ol>
+      <div class="cols">
+        <div>
+          <h3>Highlights</h3>
+          <ul>
+            <li>Carlsbad Caverns: down the Natural Entrance, back up by elevator</li>
+            <li>Mexican Canyon Trestle and the town of Cloudcroft</li>
+            <li>White Sands in the evening light</li>
+            <li>Petroglyph National Monument, the Breaking Bad stops, and Sandia Peak Tramway at sunset</li>
+            <li>Santa Fe Plaza and Loretto Chapel</li>
+            <li>Route 66 murals in Tucumcari, Cadillac Ranch, then Amarillo</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Good to know</h3>
+          <ul class="notes">
+            <li>Overnights in Socorro, Santa Fe and Amarillo.</li>
+            <li>Santa Fe to Tucumcari goes direct through Clines Corners, so no backtracking through Albuquerque.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="links">
+        <span class="btn pending">Itinerary not published yet</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="trip" id="ozarks" style="--c:var(--c-oz)">
+    <div class="when">
+      <p class="dates">Jul 27&ndash;30</p>
+      <p class="meta">4 days, optional 5th<br>Drove from Richardson, TX</p>
+    </div>
+    <div class="body">
+      <h2>Buffalo River and Branson</h2>
+      <ol class="route-list">
+        <li>Richardson</li><li>Ponca / Jasper, AR</li><li>Boxley Valley</li><li>Branson, MO</li><li>Home</li>
+      </ol>
+      <div class="cols">
+        <div>
+          <h3>Highlights</h3>
+          <ul>
+            <li>A float on the Buffalo River</li>
+            <li>Hawksbill Crag, the one hike: about 1.5 miles round trip</li>
+            <li>Elk in Boxley Valley at dawn or dusk</li>
+            <li>Birthday dinner in Branson on July 29</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Good to know</h3>
+          <ul class="notes">
+            <li>About 955 miles round trip, with a 6 hour drive on day one.</li>
+            <li>The upper Buffalo often runs too low to float by late July. Check with outfitters a few days ahead.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="links">
+        <span class="btn pending">Itinerary not published yet</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="trip" id="colorado" style="--c:var(--c-co)">
+    <div class="when">
+      <p class="dates">Aug 21&ndash;25</p>
+      <p class="meta">5 days<br>Flew Dallas to Denver</p>
+    </div>
+    <div class="body">
+      <h2>Colorado Rockies</h2>
+      <ol class="route-list">
+        <li>Denver</li><li>Colorado Springs</li><li>Ca&ntilde;on City</li><li>Copper Mountain</li><li>Aspen</li><li>Granby</li><li>Rocky Mountain NP</li><li>Boulder</li><li>Denver</li>
+      </ol>
+      <div class="cols">
+        <div>
+          <h3>Highlights</h3>
+          <ul>
+            <li>Pikes Peak Highway and Garden of the Gods</li>
+            <li>Royal Gorge Route Railroad, 9 AM departure</li>
+            <li>Rocky Mountain Coaster at Copper Mountain</li>
+            <li>Independence Pass to Aspen and Maroon Bells</li>
+            <li>Trail Ridge Road and Bear Lake, with timed entry on Aug 24</li>
+            <li>Pearl Street Mall and Red Rocks on the last day</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Good to know</h3>
+          <ul class="notes">
+            <li>Nights: Motel 6 Ca&ntilde;on City, Cambria Hotel Copper Mountain, YMCA of the Rockies Snow Mountain Ranch in Granby, then Boulder.</li>
+            <li>The flight landed late on day one, so Paint Mines dropped out.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="links">
+        <a class="btn primary" href="https://rashijain0212.github.io/colorado/" target="_blank" rel="noopener">Full itinerary <span>&nearr;</span></a>
+      </div>
+    </div>
+  </article>
+
+  <article class="trip" id="washington" style="--c:var(--c-wa)">
+    <div class="when">
+      <p class="dates">Sep 1&ndash;6</p>
+      <p class="meta">6 days<br>Flew Dallas to Seattle</p>
+    </div>
+    <div class="body">
+      <h2>Washington and Oregon</h2>
+      <ol class="route-list">
+        <li>Seattle</li><li>Portland</li><li>Columbia Gorge</li><li>Mount Rainier</li><li>Ocean Shores</li><li>Olympic coast</li><li>Forks</li><li>Port Townsend</li><li>Whidbey Island</li><li>North Cascades</li><li>Bellingham</li><li>Seattle</li>
+      </ol>
+      <div class="cols">
+        <div>
+          <h3>Highlights</h3>
+          <ul>
+            <li>Multnomah Falls and the Columbia River Gorge</li>
+            <li>Mount Rainier by way of Stevens Canyon</li>
+            <li>Tree of Life at Kalaloch, Ruby Beach, and the Hoh Rain Forest</li>
+            <li>Twilight stops in Forks</li>
+            <li>The Port Townsend to Coupeville ferry at night</li>
+            <li>North Cascades Highway past Diablo Lake and Washington Pass</li>
+            <li>Outback Kangaroo Farm in Arlington</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Good to know</h3>
+          <ul class="notes">
+            <li>The route changed on the road. North Cascades was cut in planning, then driven near the end.</li>
+            <li>The itinerary is also published as its own standalone site.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="links">
+        <a class="btn primary" href="https://rashijain0212.github.io/Seattle-and-Portland/" target="_blank" rel="noopener">Full itinerary <span>&nearr;</span></a>
+      </div>
+    </div>
+  </article>
+
+  <article class="trip" id="california" style="--c:var(--c-ca)">
+    <div class="when">
+      <p class="dates">Oct 10&ndash;19</p>
+      <p class="meta">10 days<br>Flew into Las Vegas, out of SFO</p>
+    </div>
+    <div class="body">
+      <h2>Nevada and California</h2>
+      <ol class="route-list">
+        <li>Las Vegas</li><li>Death Valley</li><li>Visalia</li><li>Sequoia</li><li>Yosemite</li><li>Bridgeport</li><li>Lake Tahoe</li><li>Vallejo</li><li>Napa</li><li>Seaside</li><li>Big Sur</li><li>San Jose</li><li>San Francisco</li>
+      </ol>
+      <div class="cols">
+        <div>
+          <h3>Highlights</h3>
+          <ul>
+            <li>Hoover Dam, a free walk down the Strip, and Seven Magic Mountains</li>
+            <li>Badwater Basin and Zabriskie Point in Death Valley</li>
+            <li>General Sherman and General Grant trees</li>
+            <li>Yosemite Valley, then Tioga Road past Olmsted Point and Tenaya Lake</li>
+            <li>All four shores of Lake Tahoe</li>
+            <li>Napa's stone-castle stops and Old Faithful Geyser</li>
+            <li>Keyhole Arch at Pfeiffer Beach and the 17-Mile Drive</li>
+            <li>Fort Point, Lombard Street, and Twin Peaks at sunset</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Good to know</h3>
+          <ul class="notes">
+            <li>Retimed day by day on the road. The itinerary repo has the latest version, with a page for every day, wildlife, packing, budget and an offline route.</li>
+            <li>The return flight left SFO at 3:35 PM.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="links">
+        <a class="btn primary" href="https://github.com/96rashijain/Nevada-San-Francisco" target="_blank" rel="noopener">Full itinerary <span>&nearr;</span></a>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<footer>
+  <span>Every itinerary was planned around vegetarian, Jain-friendly food.</span>
+  <span>Booking references and confirmation numbers are not included. Routes on the map join the main stops and are not the exact roads driven.</span>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var svg = document.getElementById('atlas');
+  if (!svg) return;
+  var NS = 'http://www.w3.org/2000/svg', W = 860, H = 580;
+  var lonMin = -126, lonMax = -92.5, latMin = 30.5, latMax = 49.5;
+  var k = Math.cos(39 * Math.PI / 180);
+  var s = Math.min((W - 40) / ((lonMax - lonMin) * k), (H - 40) / (latMax - latMin));
+  var ox = (W - (lonMax - lonMin) * k * s) / 2, oy = (H - (latMax - latMin) * s) / 2;
+  function P(c){ return [ox + (c[1] - lonMin) * k * s, oy + (latMax - c[0]) * s]; }
+  function el(name, attrs, parent){
+    var e = document.createElementNS(NS, name);
+    for (var a in attrs) e.setAttribute(a, attrs[a]);
+    (parent || svg).appendChild(e);
+    return e;
+  }
+
+  var pl = {
+    richardson:[32.95,-96.73],
+    carlsbad:[32.42,-104.23], cloudcroft:[32.96,-105.74], whitesands:[32.78,-106.17], socorro:[34.06,-106.89],
+    abq:[35.08,-106.65], santafe:[35.69,-105.94], tucumcari:[35.17,-103.72], amarillo:[35.22,-101.83],
+    jasper:[36.0,-93.19], branson:[36.64,-93.22],
+    denver:[39.74,-104.99], cosprings:[38.83,-104.82], canon:[38.44,-105.24], copper:[39.5,-106.15],
+    aspen:[39.19,-106.82], granby:[40.09,-105.94], rmnp:[40.34,-105.68], boulder:[40.01,-105.27],
+    seattle:[47.61,-122.33], portland:[45.52,-122.68], gorge:[45.58,-122.12], rainier:[46.85,-121.76],
+    oceanshores:[47.0,-124.15], forks:[47.95,-124.39], porttownsend:[48.12,-122.76], coupeville:[48.22,-122.69],
+    concrete:[48.53,-121.75], wapass:[48.52,-120.65], bellingham:[48.75,-122.48],
+    lasvegas:[36.17,-115.14], deathvalley:[36.24,-116.82], visalia:[36.33,-119.29], sequoia:[36.57,-118.78],
+    yosemite:[37.75,-119.59], bridgeport:[38.26,-119.23], tahoe:[39.1,-120.03], vallejo:[38.1,-122.26],
+    seaside:[36.61,-121.85], sanjose:[37.34,-121.89], sf:[37.77,-122.42]
+  };
+
+  var trips = [
+    {id:'nm', color:'var(--c-nm)', stops:['richardson','carlsbad','cloudcroft','whitesands','socorro','abq','santafe','tucumcari','amarillo','richardson']},
+    {id:'oz', color:'var(--c-oz)', stops:['richardson','jasper','branson','richardson']},
+    {id:'co', color:'var(--c-co)', stops:['denver','cosprings','canon','copper','aspen','granby','rmnp','boulder','denver']},
+    {id:'wa', color:'var(--c-wa)', stops:['seattle','portland','gorge','rainier','oceanshores','forks','porttownsend','coupeville','concrete','wapass','bellingham','seattle']},
+    {id:'ca', color:'var(--c-ca)', stops:['lasvegas','deathvalley','visalia','sequoia','yosemite','bridgeport','tahoe','vallejo','seaside','sanjose','sf']}
+  ];
+  var flights = [['richardson','denver'],['richardson','seattle'],['richardson','lasvegas'],['sf','richardson']];
+
+  /* graticule */
+  var g1 = el('g', {});
+  var lat, lon, a, b;
+  for (lat = 35; lat <= 45; lat += 5){
+    a = P([lat, lonMin]); b = P([lat, lonMax]);
+    el('line', {x1:a[0], y1:a[1], x2:b[0], y2:b[1], 'class':'gl'}, g1);
+    var t1 = el('text', {x:a[0] + 4, y:a[1] - 5, 'class':'gt'}, g1); t1.textContent = lat + '°N';
+  }
+  for (lon = -120; lon <= -95; lon += 5){
+    a = P([latMax, lon]); b = P([latMin, lon]);
+    el('line', {x1:a[0], y1:a[1], x2:b[0], y2:b[1], 'class':'gl'}, g1);
+    var t2 = el('text', {x:b[0] + 4, y:b[1] - 6, 'class':'gt'}, g1); t2.textContent = Math.abs(lon) + '°W';
+  }
+
+  /* flights */
+  var g2 = el('g', {});
+  flights.forEach(function(f){
+    var p = P(pl[f[0]]), q = P(pl[f[1]]);
+    var mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2 - Math.abs(p[0] - q[0]) * 0.08;
+    el('path', {d:'M' + p[0] + ',' + p[1] + ' Q' + mx + ',' + my + ' ' + q[0] + ',' + q[1], 'class':'fl'}, g2);
+  });
+
+  /* routes */
+  trips.forEach(function(t){
+    var g = el('g', {'class':'tg', 'data-t':t.id});
+    var d = t.stops.map(function(n, i){ var p = P(pl[n]); return (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
+    el('path', {d:d, 'class':'route', style:'stroke:' + t.color}, g);
+    t.stops.forEach(function(n){
+      if (n === 'richardson') return;
+      var p = P(pl[n]);
+      el('circle', {cx:p[0], cy:p[1], r:3.6, 'class':'dot', style:'stroke:' + t.color}, g);
+    });
+  });
+
+  /* hub */
+  var h = P(pl.richardson);
+  el('circle', {cx:h[0], cy:h[1], r:6, 'class':'hub'});
+
+  /* labels: key, text, dx, dy, anchor, minor */
+  var labels = [
+    ['richardson','Dallas',0,22,'middle',0],
+    ['carlsbad','Carlsbad',0,22,'middle',1],
+    ['santafe','Santa Fe',-9,-8,'end',0],
+    ['amarillo','Amarillo',0,-12,'middle',1],
+    ['branson','Branson',10,-6,'start',0],
+    ['denver','Denver',10,-8,'start',0],
+    ['aspen','Aspen',-9,-8,'end',1],
+    ['seattle','Seattle',10,-4,'start',0],
+    ['portland','Portland',10,6,'start',1],
+    ['lasvegas','Las Vegas',10,6,'start',0],
+    ['deathvalley','Death Valley',0,22,'middle',1],
+    ['sf','San Francisco',-10,6,'end',0]
+  ];
+  labels.forEach(function(l){
+    var p = P(pl[l[0]]);
+    var t = el('text', {x:p[0] + l[2], y:p[1] + l[3], 'text-anchor':l[4], 'class':'lbl' + (l[5] ? ' minor' : '')});
+    t.textContent = l[1];
+  });
+
+  /* highlight a route from the jump links */
+  var groups = svg.querySelectorAll('.tg');
+  function setHl(id){
+    svg.classList.toggle('hl', !!id);
+    for (var i = 0; i < groups.length; i++) groups[i].classList.toggle('on', groups[i].getAttribute('data-t') === id);
+  }
+  var links = document.querySelectorAll('.jump a[data-hl]');
+  for (var i = 0; i < links.length; i++){
+    (function(a){
+      var id = a.getAttribute('data-hl');
+      a.addEventListener('mouseenter', function(){ setHl(id); });
+      a.addEventListener('focus', function(){ setHl(id); });
+      a.addEventListener('mouseleave', function(){ setHl(null); });
+      a.addEventListener('blur', function(){ setHl(null); });
+    })(links[i]);
+  }
+})();
+</script>
+</body>
+</html>
